@@ -7,7 +7,7 @@ from onedmotion import MotionProfile
 m = MotionProfile(start_time = 100.,
                   start_pos = 0.,
                   max_velocity = 7.5,
-                  acceleration = 0.15,
+                  acceleration = 0.05,
                   deceleration = 0.5,
                   distance = 500.)
 
@@ -18,8 +18,8 @@ x = []
 v = []
 for i in range(300):
   t += [i]
-  x += [m.GetPos(i)]
-  v += [m.GetVelocity(i)]
+  x += [m.get_pos(i)]
+  v += [m.get_velocity(i)]
 
 plot(t,x,'r',label='Position')
 ylabel('Position')

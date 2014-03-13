@@ -49,7 +49,7 @@ class MotionProfile:
 
     # If the uniform distance is negative, then we never reach the
     # maximum speed, and we instead do a triangle motion.
-    if self.uniform_dist < 0:
+    if self.uniform_dist * self.distance < 0:
       # Find intersection between the acceleration and the deceleration position
       # and velocity.
       #    1/2 * Ta^2 * a + 1/2 * Td^2 * d = D
@@ -77,8 +77,8 @@ class MotionProfile:
     self.uniform_end_time = self.accel_end_time + self.uniform_dist / self.max_velocity
     self.decel_end_time = self.uniform_end_time + full_speed_to_end_velocity_time
 
-  def GetPos(self,
-             time):
+  def get_pos(self,
+              time):
     """Get the position of the system at time time"""
     if time < self.start_time:
       return self.start_pos
@@ -91,7 +91,7 @@ class MotionProfile:
     else:
       return self.start_pos + self.distance + (time - self.decel_end_time) * self.end_velocity
 
-  def GetVelocity(self,
+  def get_velocity(self,
                   time):
     """Get the velocity of the system at time `time`"""
     if time < self.start_time:
@@ -104,4 +104,7 @@ class MotionProfile:
       return self.max_velocity - self.deceleration * (time-self.uniform_end_time)
     else:
       return self.end_velocity
+
+  def get_destination(self):
+    return self.start_pos + self.distance
 
