@@ -20,6 +20,7 @@
 # 2015-06-02 Tue
 
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 from onedmotion import MotionProfile
 import simpy
 
@@ -82,7 +83,6 @@ class Axis:
 
     def add_motion(self, destination):
         """Add a new motion to the motion file"""
-        print 'Adding request to ', destination
         self.action_queue.put(MotionRequest(destination))
 
     def add_block(self, block):
@@ -126,7 +126,6 @@ class Axis:
                 elif type(r) is MotionRequest:
                     distance = r.destination - self.pos
                     s = -1. if distance < 0 else 1.
-                    print 'Starting motion from ',self.pos, 'destination=',r.destination
                     mp = MotionProfile(start_time = env.now,
                                        start_pos = self.pos,
                                        distance = distance,
@@ -139,7 +138,7 @@ class Axis:
 
 logger = Logger()
 env = simpy.Environment()
-xAxis = Axis(env,0,logger=logger)
+xAxis = Axis(env,0,logger=logger,max_velocity=50)
 zAxis = Axis(env,1,logger=logger,max_velocity=1)
 env.process(xAxis.process())
 env.process(zAxis.process())
@@ -152,13 +151,13 @@ for i in range(2):
     zAxis.move_to(100)
     xAxis.add_block(zAxis.add_notifier())
     xAxis.move_to(1000)
-    xAxis.sleep(100)
+    xAxis.sleep(20)
     xAxis.move_to(500)
     zAxis.add_block(xAxis.add_notifier())
     zAxis.move_to(0)
     xAxis.add_block(zAxis.add_notifier())
     xAxis.move_to(0)
-    xAxis.sleep(200)
+    xAxis.sleep(20)
 
 EndTime = 2000
 env.run(until=EndTime)
@@ -172,11 +171,12 @@ vxAry = []
 vzAry = []
 
 # Output the events
-for ax,mp,time in logger.log_events:
-    print time,ax, mp.start_time, mp
+#for ax,mp,time in logger.log_events:
+#    print time,ax, mp.start_time, mp
 
 # Plot them
-for i in range(0,EndTime,1):
+dt = 2
+for i in range(0,EndTime,dt):
     t = i
     tAry+= [t]
     mp = logger.get_motion_profile(0, t)
@@ -204,4 +204,47 @@ if len(vzAry):
 plt.legend()
 plt.ylabel('Velocity')
 plt.xlabel('Time')
+
+# Another plot animating the car motion
+def car_pos_to_poly(x,z,reverse=False):
+    # A primitive car polygon
+    car_height = 50
+    car = [[0,0],
+           [70,0],
+           [70,car_height * 0.5],
+           [55,car_height * 0.5],
+           [50,car_height],
+           [0,car_height],
+           ]
+
+    # Flip the car if it going backwards
+    if reverse:
+        return [[x+70-cx,z+cz] for cx,cz in car]
+    else:
+        return [[x+cx,z+cz] for cx,cz in car]
+
+def animate(i):
+    '''An animation of the car motion. Use the velocity array to
+    determine whether to flip the direction of the car'''
+
+    global pxAry, pyAry, vxAry
+    # Search for last non-zero for the car direction
+    j = i
+    reverse = False
+    while j >= 0 and vxAry[j]==0:
+        j-=1
+    if j>=0:
+        reverse = vxAry[j] < 0
+    patch.set_xy(car_pos_to_poly(pxAry[i],pzAry[i],reverse=reverse))
+    return patch,
+    
+# The animation window
+fig = plt.figure()
+ax = plt.axes(xlim=(-100, 1100), ylim=(-500, 500))
+pts = car_pos_to_poly(0,0)
+patch = plt.Polygon(pts, fill=True, facecolor='r')
+ax.add_patch(patch)
+anim = animation.FuncAnimation(fig, animate,
+                               frames=len(pxAry),
+                               interval=5)
 plt.show()
