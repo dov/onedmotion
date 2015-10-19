@@ -28,8 +28,17 @@ class MotionProfile:
                max_velocity = 50,
                acceleration = 50,
                deceleration = 50):
-    """Create a motion of a linear motion from `start_pos` at
-    distance `distance`."""
+    """Create a motion of a linear motion from `start_pos` at distance `distance`.
+
+    To simulate a negative motion all of the following entities need to be inverted:
+
+      - start_velocity
+      - end_velocity
+      - distance
+      - acceleration
+      - deceleration
+      - max_velocity (which really should be called requested peak velocity)
+    """
     self.start_time = start_time
     self.start_pos = start_pos
     self.start_velocity = start_velocity
@@ -76,6 +85,9 @@ class MotionProfile:
     self.uniform_accumulated_dist = self.accel_accumulated_dist + self.uniform_dist
     self.uniform_end_time = self.accel_end_time + self.uniform_dist / self.max_velocity
     self.decel_end_time = self.uniform_end_time + full_speed_to_end_velocity_time
+    self.accel_end_pos = self.get_pos(self.accel_end_time)
+    self.uniform_end_pos = self.get_pos(self.uniform_end_time)
+    self.decel_end_pos = self.get_pos(self.decel_end_time)
 
   def get_pos(self,
               time):
@@ -108,3 +120,81 @@ class MotionProfile:
   def get_destination(self):
     return self.start_pos + self.distance
 
+  def get_end_time(self):
+    return self.decel_end_time
+  
+  def get_time_from_position(self, pos):
+    epsilon = 1e-5
+
+    if self.max_velocity < 0:
+      if pos > self.start_pos:
+        return None
+      elif pos > self.accel_end_pos:
+        return self.start_time + (math.sqrt(2 * self.acceleration * (pos - self.start_pos) + self.start_velocity**2) - self.start_velocity) / -self.acceleration
+      elif pos > self.uniform_end_pos:
+        return self.accel_end_time + 1.0*(pos - self.accel_end_pos) / self.max_velocity
+      elif pos > self.decel_end_pos:
+        return self.uniform_end_time + ((math.sqrt(2 * self.deceleration* (self.uniform_end_pos - pos ) + self.max_velocity**2) + self.max_velocity) / (self.deceleration))
+      elif pos > self.decel_end_pos:
+        return self.decel_end_time
+      else:
+        return None
+    else:
+      if pos < self.start_pos:
+        return None
+      elif pos < self.accel_end_pos:
+        return self.start_time + (math.sqrt(2 * self.acceleration * (pos - self.start_pos) + self.start_velocity**2) - self.start_velocity) / self.acceleration
+      elif pos < self.uniform_end_pos:
+        return self.accel_end_time + 1.0*(pos - self.accel_end_pos) / self.max_velocity
+      elif pos < self.decel_end_pos:
+        return self.uniform_end_time + ((math.sqrt(-2 * self.deceleration* (pos - self.uniform_end_pos) + self.max_velocity**2) - self.max_velocity) / (-self.deceleration))
+      elif pos < self.decel_end_pos:
+        return self.decel_end_time
+      else:
+        return None
+
+  def plot(self,
+           N = 200,
+           pos_style='r',
+           vel_style = 'g',
+           ax=None,
+           legend_loc=0):
+    '''Plot a graph of the motion with matplotlib. Returns the axis and the
+    graphs'''
+    import matplotlib.pyplot as plt
+    tAry = []
+    xAry = []
+    vAry = []
+    tEnd = self.get_end_time()
+    
+    for i in range(N):
+      t = tEnd / N *i 
+      tAry += [t]
+      xAry += [self.get_pos(t)]
+      vAry += [self.get_velocity(t)]
+    
+    if ax is None:
+      ax = plt.gca()
+    g1 = ax.plot(tAry,xAry,'r',label='Position')[0]
+    ax.set_ylabel('Position')
+    ax1 = ax.twinx()
+    g2 = ax1.plot(tAry,vAry,'g',label='Velocity')[0]
+    ax1.set_ylabel('Velocity')
+
+    ax.legend([g1,g2],
+              [v.get_label() for v in [g1,g2]],
+              loc=legend_loc)
+    return ax,[g1,g2]
+
+if __name__=='__main__':
+  import matplotlib.pyplot as plt
+
+  m = MotionProfile(start_time = 0.,
+                  start_pos = 0.,
+                  max_velocity = 7.5,
+                  acceleration = 0.3,
+                  deceleration = 0.3,
+                  distance = 500.)
+  ax,gg = m.plot()
+  
+  plt.show()
