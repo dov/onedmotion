@@ -14,7 +14,7 @@ if 0:
     t = 1.0*end_time/10.0*i
     x = m.get_pos(t)
     tout = m.get_time_from_position(x)
-    print t,x,tout
+    print(t,x,tout)
     assert(abs(t-tout)<epsilon)
 
 if 1:
@@ -26,12 +26,12 @@ if 1:
                     distance = -500.)
   
   end_time = m.get_end_time()
-  print 'end_time = ', end_time
+  print('end_time = ', end_time)
   epsilon = 1e-8
   for i in range(10):
     t = 1.0*end_time/10.0*i
     x = m.get_pos(t)
     tout = m.get_time_from_position(x)
-    print t,x,tout
+    print(t,x,tout)
     assert(abs(t-tout)<epsilon)
   

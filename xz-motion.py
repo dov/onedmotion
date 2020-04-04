@@ -19,6 +19,7 @@
 # Dov Grobgeld <dov.grobgeld@gmail.com>
 # 2015-06-02 Tue
 
+from __future__ import print_function
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from onedmotion import MotionProfile
@@ -115,12 +116,12 @@ class Axis:
             with self.action_queue.get() as req:
                 r = yield req
                 if type(r) is BlockRequest:
-                    print 'Waiting for block to clear!'
+                    print('Waiting for block to clear!')
                     yield r.block.get()
-                    print 'block cleared!'
+                    print('block cleared!')
                 elif type(r) is NotifyRequest:    
                     yield r.block.put(mp)
-                    print 'notifying!'
+                    print('notifying!')
                 elif type(r) is SleepRequest:    
                     yield env.timeout(r.time)
                 elif type(r) is MotionRequest:
@@ -161,7 +162,7 @@ for i in range(2):
 
 EndTime = 2000
 env.run(until=EndTime)
-print 'Done simulation'
+print('Done simulation')
 
 # Plot the motion
 tAry = []

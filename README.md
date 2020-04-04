@@ -1,5 +1,4 @@
-onedmotion
-==========
+# onedmotion
 
 onedmotion is a python module for 1D motion calculations. It contains a class  describing a 1D motion profile and allows getting the position and velocity of the system as a function of time.
 
@@ -12,15 +11,19 @@ Currently a motion profile is described by the following properties:
 
 What is currently missing is jerk and the more complex combined motions.
 
-Usage
------
+## Usage
 
 See test-plot-motion.py for an example of how to use.
 
-License
--------
+See xz-motion.py how to do coupled motion planning with simpy.
 
-Copyright &copy; 2014&ndash;Dov Grobgeld  
+## Velocity and Position
+
+![Velocity and Position](travel.png)
+
+## License
+
+Copyright &copy; 2014-2020 &ndash;Dov Grobgeld  
 
 This library is free software; you can redistribute it and/or modify it
 under the terms of the GNU Lesser General Public License as published by the
