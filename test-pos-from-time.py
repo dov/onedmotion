@@ -1,3 +1,4 @@
+# A small computational example with assertions
 from onedmotion import MotionProfile
 
 if 0:
